@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co; img-src 'self' data:; form-action 'none'; base-uri 'none'">
+<title>Desk Macro Terminal</title>
+<style>
+  :root{
+    --bg:#0f0f11; --card:#17171b; --card2:#1d1d22; --border:#2a2a31;
+    --t1:#ecebe7; --t2:#aeaba5; --t3:#74716c;
+    --gold:#c9a84c; --gold2:#e8d5a0; --red:#e0506e; --green:#2fc07f;
+  }
+  *{ box-sizing:border-box }
+  html,body{ margin:0; min-height:100%; background:var(--bg); color:var(--t1);
+    font:15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif }
+  main{ max-width:440px; margin:0 auto; padding:48px 16px 40px }
+  .marque{ display:flex; align-items:center; gap:10px; margin-bottom:30px }
+  .marque b{ font-size:13px; letter-spacing:2.4px; color:var(--gold2) }
+  h1{ font-size:24px; margin:0 0 6px }
+  .sous{ color:var(--t2); font-size:13.5px; margin:0 0 24px }
+  .onglets{ display:flex; gap:6px; margin-bottom:18px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px }
+  .onglets button{ flex:1; background:transparent; border:0; color:var(--t2); padding:9px; border-radius:7px; cursor:pointer; font:inherit; font-size:13.5px }
+  .onglets button.on{ background:var(--card2); color:var(--t1); font-weight:600 }
+  label{ display:block; font-size:11px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--t3); margin:0 0 6px }
+  input{ width:100%; padding:12px; margin-bottom:14px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card); color:var(--t1); font:inherit; outline:none }
+  input:focus{ border-color:var(--gold) }
+  button.action{ width:100%; font:inherit; cursor:pointer; border-radius:8px; padding:12px; border:0;
+    background:var(--gold); color:#15130d; font-weight:700 }
+  button.action:hover{ background:var(--gold2) }
+  button.second{ width:100%; font:inherit; cursor:pointer; border-radius:8px; padding:11px; margin-top:10px;
+    background:transparent; color:var(--t1); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:9px }
+  button.second:hover{ border-color:var(--t3) }
+  button[disabled]{ opacity:.55; cursor:default }
+  .ou{ display:flex; align-items:center; gap:10px; color:var(--t3); font-size:12px; margin:16px 0 6px }
+  .ou::before,.ou::after{ content:""; flex:1; height:1px; background:var(--border) }
+  a{ color:var(--t2); cursor:pointer; text-decoration:none; font-size:13px }
+  a:hover{ color:var(--gold2) }
+  .lien{ text-align:right; margin:-6px 0 14px }
+  #msg{ margin-top:16px; font-size:13.5px; color:var(--t2); padding:10px 12px; border-radius:8px;
+    border-left:2px solid var(--border); background:var(--card); display:none }
+  #msg.info,#msg.ok,#msg.erreur,#msg.attente{ display:block }
+  #msg.erreur{ border-left-color:var(--red); color:#f0b3c0 }
+  #msg.ok{ border-left-color:var(--green) }
+  #msg.attente{ border-left-color:var(--gold) }
+  .carte{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px }
+  .carte h2{ font-size:16px; margin:0 0 6px }
+  .carte p{ color:var(--t2); font-size:13.5px; margin:0 0 14px }
+  ol{ color:var(--t2); font-size:13.5px; padding-left:20px; margin:14px 0 0 }
+  ol li{ margin-bottom:6px }
+  .qui{ color:var(--t3); font-size:12.5px; margin:16px 0 0; display:flex; justify-content:space-between; gap:10px }
+  [hidden]{ display:none !important }
+  .pied{ margin-top:34px; font-size:11.5px; color:var(--t3); text-align:center }
+</style>
+</head>
+<body>
+<main>
+  <div class="marque">
+    <svg viewBox="0 0 48 48" width="26" height="26" aria-hidden="true">
+      <defs><linearGradient id="or" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#8a6f31"/><stop offset=".5" stop-color="#c9a84c"/><stop offset="1" stop-color="#e8d5a0"/>
+      </linearGradient></defs>
+      <path d="M10.5 34V16.5" stroke="url(#or)" stroke-width="2" stroke-linecap="round" opacity=".5"/>
+      <rect x="6.6" y="20" width="7.8" height="12" rx="1.6" fill="none" stroke="url(#or)" stroke-width="2" opacity=".55"/>
+      <path d="M24 40V6.5" stroke="url(#or)" stroke-width="2.3" stroke-linecap="round"/>
+      <rect x="19.4" y="11.5" width="9.2" height="23" rx="1.9" fill="url(#or)"/>
+      <path d="M37.5 31.5V13" stroke="url(#or)" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+      <rect x="33.6" y="16.5" width="7.8" height="12" rx="1.6" fill="none" stroke="url(#or)" stroke-width="2" opacity=".8"/>
+    </svg>
+    <b>DESK MACRO</b>
+  </div>
+
+  <!-- NON CONNECTE -->
+  <section id="v-entree">
+    <h1>Desk Macro Terminal</h1>
+    <p class="sous">Accès réservé aux membres de la formation. Chaque compte est validé à la main.</p>
+    <div class="onglets">
+      <button id="o-connexion" class="on">Se connecter</button>
+      <button id="o-inscription">Créer un compte</button>
+    </div>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="username" spellcheck="false">
+    <label for="mdp">Mot de passe</label>
+    <input id="mdp" type="password" autocomplete="current-password">
+    <div id="bloc-mdp2" hidden>
+      <label for="mdp2">Mot de passe, encore une fois</label>
+      <input id="mdp2" type="password" autocomplete="new-password">
+    </div>
+    <div class="lien" id="bloc-oubli"><a id="a-oubli">Mot de passe oublié</a></div>
+    <button class="action" id="b-valider">Se connecter</button>
+    <!-- La connexion GitHub n'est pas branchée dans Supabase (étape 6 du guide,
+         facultative) : le bouton reste dans le code mais caché. Retirer les deux
+         « hidden » le jour où le fournisseur GitHub est activé. -->
+    <div class="ou" hidden>ou</div>
+    <button class="second" id="b-github" hidden>
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Continuer avec GitHub
+    </button>
+  </section>
+
+  <!-- MOT DE PASSE OUBLIE -->
+  <section id="v-oubli" hidden>
+    <h1>Mot de passe oublié</h1>
+    <p class="sous">Entre ton e-mail : tu recevras un lien pour en choisir un nouveau.</p>
+    <label for="email-oubli">E-mail</label>
+    <input id="email-oubli" type="email" autocomplete="username" spellcheck="false">
+    <button class="action" id="b-oubli">Envoyer le lien</button>
+    <button class="second" id="b-retour">Retour</button>
+  </section>
+
+  <!-- NOUVEAU MOT DE PASSE (arrivee par le lien recu) -->
+  <section id="v-nouveau" hidden>
+    <h1>Nouveau mot de passe</h1>
+    <p class="sous">Choisis-en un de huit caractères au moins.</p>
+    <label for="mdp-nouveau">Nouveau mot de passe</label>
+    <input id="mdp-nouveau" type="password" autocomplete="new-password">
+    <button class="action" id="b-nouveau">Enregistrer</button>
+  </section>
+
+  <!-- CONNECTE -->
+  <section id="v-compte" hidden>
+    <h1>Ton accès</h1>
+    <div class="carte" id="c-attente" hidden>
+      <h2>En attente de validation</h2>
+      <p>Ton compte est créé. Isaac le valide à la main ; reviens ici une fois qu'il te l'a confirmé.</p>
+      <button class="second" id="b-reverifier">Vérifier à nouveau</button>
+    </div>
+    <div class="carte" id="c-valide" hidden>
+      <h2>Compte validé</h2>
+      <p>Tu peux télécharger l'application pour Windows.</p>
+      <button class="action" id="b-telecharger">Télécharger Desk Macro Terminal</button>
+      <ol>
+        <li>Ouvre le fichier téléchargé. Windows peut afficher « Windows a protégé votre ordinateur » : l'application n'est pas signée par un éditeur payant. Clique sur <b>Informations complémentaires</b>, puis <b>Exécuter quand même</b>.</li>
+        <li>Connecte-toi dans l'application avec ce même compte.</li>
+        <li>Dans <b>Réglages</b>, ajoute tes propres clés d'API. Aucune clé n'est fournie.</li>
+      </ol>
+    </div>
+    <div class="qui"><span id="qui"></span><a id="a-deconnexion">Se déconnecter</a></div>
+  </section>
+
+  <div id="msg"></div>
+  <div class="pied">Desk Macro · accès privé</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"
+        integrity="sha384-K1nraABOP/zFehpLIUksXebbs7jMpB8gYMlb+uhVKZcWT/9Vkq1+qhv6ndC+1Yuz" crossorigin="anonymous"></script>
+<script src="page.js"></script>
+</body>
+</html>
