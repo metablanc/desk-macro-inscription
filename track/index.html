@@ -11,122 +11,236 @@
 <meta name="description" content="Track Metal : ton track record de trader, chaque trade mesuré en R, tes paliers de prop firm suivis, et un coach IA qui lit tes vrais chiffres.">
 <link rel="icon" href="icon-192.png">
 <style>
+  @property --a { syntax:'<angle>'; inherits:false; initial-value:0deg }
   :root{
-    --bg:#0c0c0e; --bg2:#111113; --card:#17171a; --card2:#1d1d21; --border:#2c2c29;
-    --t1:#ecebe7; --t2:#a9a59e; --t3:#74716c;
-    --or:#ccb371; --or2:#e6ce93; --red:#e0506e; --green:#27b870;
+    --bg:#08080a; --bg2:#0e0e11; --card:#141417; --card2:#1b1b1f; --border:#2a2925;
+    --t1:#eeece6; --t2:#aba79f; --t3:#76726b;
+    --or:#ccb371; --or2:#ecd79d; --red:#e0506e; --green:#27b870;
   }
   *{ box-sizing:border-box }
+  html{ scroll-behavior:smooth }
   html,body{ margin:0; background:var(--bg); color:var(--t1);
-    font:15px/1.6 "Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,sans-serif }
+    font:15px/1.6 "Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,sans-serif; overflow-x:hidden }
   a{ color:var(--t2); text-decoration:none; cursor:pointer }
   a:hover{ color:var(--or2) }
-  .doree{ background:linear-gradient(90deg,#f2dea4,#ccb371,#e8cf94); -webkit-background-clip:text; background-clip:text; color:transparent }
-  .cont{ max-width:1120px; margin:0 auto; padding:0 22px }
   [hidden]{ display:none !important }
+  .cont{ max-width:1180px; margin:0 auto; padding:0 22px; position:relative }
+
+  /* L'OR QUI BRILLE : un degrade qui glisse sur le texte */
+  .doree{ background:linear-gradient(100deg,#b8984f 0%,#f6e3a8 22%,#ccb371 40%,#fff3cc 50%,#ccb371 60%,#e8cf94 80%,#b8984f 100%);
+    background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:brille 6s linear infinite }
+  @keyframes brille{ to{ background-position:-220% 0 } }
 
   /* ── EN-TETE ── */
-  header{ position:sticky; top:0; z-index:10; background:rgba(12,12,14,.82); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.05) }
-  header .cont{ display:flex; align-items:center; gap:12px; height:62px }
-  .marque{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:17px }
+  header{ position:fixed; top:0; left:0; right:0; z-index:50; transition:background .3s, border-color .3s;
+    border-bottom:1px solid transparent }
+  header.colle{ background:rgba(8,8,10,.78); backdrop-filter:blur(14px); border-bottom-color:rgba(255,255,255,.06) }
+  header .cont{ display:flex; align-items:center; gap:12px; height:66px }
+  .marque{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:17px; letter-spacing:.3px }
+  .marque svg{ animation:respire 4s ease-in-out infinite; filter:drop-shadow(0 2px 10px rgba(204,179,113,.5)) }
+  @keyframes respire{ 50%{ transform:translateY(-2px) scale(1.04); filter:drop-shadow(0 4px 16px rgba(204,179,113,.8)) } }
   header nav{ margin-left:auto; display:flex; gap:22px; align-items:center; font-size:14px }
-  .bouton{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font:inherit; font-weight:800; cursor:pointer;
-    border-radius:10px; padding:11px 20px; border:0; background:linear-gradient(180deg,#d8bf7d,#ccb371); color:#15130d;
-    box-shadow:0 8px 26px rgba(204,179,113,.2) }
-  .bouton:hover{ background:var(--or2) }
-  .bouton.vide{ background:transparent; color:var(--t1); border:1px solid var(--border); box-shadow:none }
-  .bouton.vide:hover{ border-color:var(--t3) }
-  .bouton.petit{ padding:8px 15px; font-size:13.5px }
 
-  /* ── HERO ── */
-  .hero{ position:relative; overflow:hidden; padding:72px 0 64px;
-    background:radial-gradient(900px 480px at 15% 0%, rgba(204,179,113,.14), transparent 60%),
-               radial-gradient(700px 420px at 100% 30%, rgba(204,179,113,.07), transparent 60%) }
-  .hero .cont{ display:grid; grid-template-columns:1.05fr .95fr; gap:46px; align-items:center }
-  .etiquette{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--or2);
-    border:1px solid rgba(204,179,113,.3); border-radius:999px; padding:5px 12px; margin-bottom:18px; background:rgba(204,179,113,.06) }
-  h1{ font-size:48px; line-height:1.06; letter-spacing:-1px; margin:0 0 18px; font-weight:800 }
-  .chapeau{ font-size:17px; color:var(--t2); margin:0 0 28px; max-width:540px }
-  .actions{ display:flex; gap:12px; flex-wrap:wrap }
-  .rassure{ margin-top:18px; font-size:13px; color:var(--t3) }
+  .bouton{ position:relative; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font:inherit; font-weight:800; cursor:pointer; border-radius:11px; padding:12px 22px; border:0;
+    background:linear-gradient(180deg,#e2c988,#c8ad68); color:#15130d;
+    box-shadow:0 10px 30px rgba(204,179,113,.25), 0 0 0 1px rgba(255,255,255,.15) inset; transition:transform .2s, box-shadow .2s }
+  .bouton:after{ content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent); transform:skewX(-20deg);
+    animation:eclat 3.8s ease-in-out infinite }
+  @keyframes eclat{ 0%,60%{ left:-60% } 100%{ left:130% } }
+  .bouton:hover{ transform:translateY(-2px); box-shadow:0 16px 40px rgba(204,179,113,.38) }
+  .bouton.vide{ background:rgba(255,255,255,.03); color:var(--t1); box-shadow:0 0 0 1px var(--border) inset }
+  .bouton.vide:after{ display:none }
+  .bouton.vide:hover{ box-shadow:0 0 0 1px rgba(204,179,113,.5) inset, 0 10px 30px rgba(0,0,0,.4) }
+  .bouton.petit{ padding:9px 16px; font-size:13.5px }
+  .bouton[disabled]{ opacity:.6; cursor:default; transform:none }
 
-  /* l'exemple d'ecran */
-  .ecran{ position:relative; background:linear-gradient(180deg,#18181b,#121214); border:1px solid var(--border); border-radius:18px;
-    padding:18px; box-shadow:0 30px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(204,179,113,.08) }
-  .ecran .barre{ display:flex; gap:6px; margin-bottom:14px }
-  .ecran .barre i{ width:9px; height:9px; border-radius:50%; background:#2c2c29 }
-  .kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px }
-  .kpi{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 12px }
-  .kpi span{ display:block; font-size:10.5px; color:var(--t3); text-transform:uppercase; letter-spacing:.6px }
-  .kpi b{ display:block; font-size:20px; margin-top:3px; font-variant-numeric:tabular-nums }
-  .graph{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px }
-  .lignes{ margin-top:12px; display:grid; gap:7px }
-  .ligne{ display:grid; grid-template-columns:70px 1fr 70px; gap:10px; align-items:center; font-size:12px; color:var(--t2);
-    background:var(--card); border:1px solid var(--border); border-radius:9px; padding:8px 10px }
-  .ligne .b{ height:6px; border-radius:3px; background:linear-gradient(90deg,#ccb371,#e6ce93) }
-  .ligne .r{ text-align:right; font-weight:700; font-variant-numeric:tabular-nums }
-  .exemple{ position:absolute; top:14px; right:16px; font-size:10.5px; color:var(--t3) }
+  /* ── HERO EN 3D ── */
+  .hero{ position:relative; min-height:100vh; display:flex; align-items:center; padding:110px 0 120px; overflow:hidden;
+    background:radial-gradient(1200px 600px at 75% 40%, rgba(204,179,113,.09), transparent 60%),
+               radial-gradient(900px 500px at 0% 0%, rgba(204,179,113,.07), transparent 60%), var(--bg) }
+  #scene{ position:absolute; inset:0 }
+  .hero:after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(90deg, rgba(8,8,10,.92) 0%, rgba(8,8,10,.6) 38%, rgba(8,8,10,0) 60%),
+               linear-gradient(0deg, var(--bg) 0%, transparent 18%) }
+  .hero .cont{ z-index:2; width:100% }
+  .texte{ max-width:560px }
+  .etiquette{ display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--or2);
+    border:1px solid rgba(204,179,113,.3); border-radius:999px; padding:6px 13px; margin-bottom:22px; background:rgba(204,179,113,.06);
+    animation:monte .8s both }
+  .etiquette i{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green); animation:pouls 1.6s infinite }
+  @keyframes pouls{ 50%{ opacity:.3 } }
+  h1{ font-size:62px; line-height:1.04; letter-spacing:-1.8px; margin:0 0 22px; font-weight:800; perspective:600px }
+  h1 .m{ display:inline-block; opacity:0; transform:translateY(40px) rotateX(-70deg); transform-origin:50% 100%;
+    animation:mot .9s cubic-bezier(.2,.8,.2,1) forwards }
+  h1 .m.doree{ animation:mot .9s cubic-bezier(.2,.8,.2,1) forwards, brille 6s linear infinite }
+  @keyframes mot{ to{ opacity:1; transform:none } }
+  .chapeau{ font-size:18px; color:var(--t2); margin:0 0 32px; animation:monte .9s .9s both }
+  .actions{ display:flex; gap:12px; flex-wrap:wrap; animation:monte .9s 1.1s both }
+  .rassure{ margin-top:22px; font-size:13px; color:var(--t3); display:flex; gap:16px; flex-wrap:wrap; animation:monte .9s 1.3s both }
+  .rassure span{ display:inline-flex; align-items:center; gap:7px }
+  .rassure span:before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--or); box-shadow:0 0 8px var(--or) }
+  @keyframes monte{ from{ opacity:0; transform:translateY(24px) } to{ opacity:1; transform:none } }
+  .defile{ position:absolute; bottom:22px; left:50%; z-index:3; transform:translateX(-50%); color:var(--t3); font-size:11px;
+    letter-spacing:1.5px; text-transform:uppercase; display:flex; flex-direction:column; align-items:center; gap:8px }
+  .defile i{ width:22px; height:36px; border:1.5px solid rgba(204,179,113,.45); border-radius:12px; position:relative }
+  .defile i:after{ content:""; position:absolute; left:50%; top:7px; width:3px; height:7px; margin-left:-1.5px; border-radius:2px;
+    background:var(--or); animation:roule 1.8s infinite }
+  @keyframes roule{ 0%{ transform:translateY(0); opacity:1 } 80%{ transform:translateY(12px); opacity:0 } 100%{ opacity:0 } }
+
+  /* ── LE BANDEAU QUI DEFILE ── */
+  .bandeau{ position:relative; z-index:2; border-top:1px solid rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.05);
+    background:linear-gradient(90deg,var(--bg),rgba(204,179,113,.05),var(--bg)); overflow:hidden; padding:15px 0 }
+  .piste{ display:flex; gap:44px; width:max-content; animation:piste 38s linear infinite }
+  .piste > span{ display:inline-flex; gap:10px; align-items:center; font-size:14px; color:var(--t2); white-space:nowrap }
+  .piste b{ color:var(--t1); font-weight:700 }
+  .piste .g{ color:var(--green); font-weight:800 } .piste .r{ color:var(--red); font-weight:800 }
+  .piste em{ font-style:normal; color:var(--or) }
+  @keyframes piste{ to{ transform:translateX(-50%) } }
 
   /* ── SECTIONS ── */
-  section.bloc{ padding:70px 0; border-top:1px solid rgba(255,255,255,.04); scroll-margin-top:40px }
-  h2{ font-size:32px; letter-spacing:-.5px; margin:0 0 10px; font-weight:800 }
-  .sous{ color:var(--t2); margin:0 0 34px; max-width:640px }
-  .grille{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px }
-  .fonc{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 20px; transition:border-color .2s, transform .2s }
-  .fonc:hover{ border-color:rgba(204,179,113,.35); transform:translateY(-2px) }
-  .fonc svg{ width:26px; height:26px; color:var(--or); margin-bottom:12px }
-  .fonc h3{ margin:0 0 6px; font-size:16px }
-  .fonc p{ margin:0; color:var(--t2); font-size:14px }
-  .etapes{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; counter-reset:e }
-  .etape{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 20px; counter-increment:e }
-  .etape::before{ content:counter(e); display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%;
-    background:rgba(204,179,113,.12); color:var(--or2); font-weight:800; margin-bottom:12px }
-  .etape h3{ margin:0 0 6px; font-size:16px }
-  .etape p{ margin:0; color:var(--t2); font-size:14px }
+  section.bloc{ padding:110px 0; position:relative; scroll-margin-top:50px }
+  .titre-s{ text-align:center; max-width:720px; margin:0 auto 54px }
+  .titre-s .mini{ font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--or) }
+  h2{ font-size:42px; line-height:1.1; letter-spacing:-1px; margin:10px 0 14px; font-weight:800 }
+  .sous{ color:var(--t2); font-size:16.5px; margin:0 }
+
+  /* Apparition au defilement */
+  .rv{ opacity:0; transform:translateY(40px) rotateX(18deg) scale(.97); transform-origin:50% 100%;
+    transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1); transition-delay:var(--dl,0s) }
+  .rv.vu{ opacity:1; transform:none }
+
+  .grille{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; perspective:1200px }
+  .fonc{ position:relative; background:linear-gradient(160deg,var(--card2),var(--card)); border:1px solid var(--border); border-radius:20px;
+    padding:28px 24px; transform-style:preserve-3d; will-change:transform; overflow:hidden }
+  .fonc.vu{ transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .25s ease-out, border-color .3s, box-shadow .3s }
+  .fonc:before{ content:""; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .3s;
+    background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%), rgba(204,179,113,.16), transparent 45%) }
+  .fonc:hover{ border-color:rgba(204,179,113,.4); box-shadow:0 30px 60px rgba(0,0,0,.45), 0 0 40px rgba(204,179,113,.08) }
+  .fonc:hover:before{ opacity:1 }
+  .fonc .ic{ width:48px; height:48px; border-radius:14px; display:grid; place-items:center; margin-bottom:18px;
+    background:linear-gradient(135deg,rgba(204,179,113,.22),rgba(204,179,113,.04)); border:1px solid rgba(204,179,113,.3);
+    transform:translateZ(40px); box-shadow:0 10px 25px rgba(0,0,0,.35) }
+  .fonc .ic svg{ width:24px; height:24px; color:var(--or2) }
+  .fonc .ic svg *{ stroke-dasharray:80; stroke-dashoffset:80; transition:stroke-dashoffset 1.4s .3s }
+  .fonc.vu .ic svg *{ stroke-dashoffset:0 }
+  .fonc h3{ margin:0 0 8px; font-size:18px; transform:translateZ(25px) }
+  .fonc p{ margin:0; color:var(--t2); font-size:14.5px; transform:translateZ(15px) }
+
+  /* Les etapes et le faisceau qui les relie */
+  .etapes{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; position:relative }
+  .faisceau{ position:absolute; top:34px; left:16%; right:16%; height:2px; background:rgba(204,179,113,.12); overflow:hidden }
+  .faisceau:after{ content:""; position:absolute; top:0; bottom:0; width:30%; left:-30%;
+    background:linear-gradient(90deg,transparent,#f6e3a8,transparent); animation:faisceau 2.8s ease-in-out infinite }
+  @keyframes faisceau{ to{ left:100% } }
+  .etape{ text-align:center; padding:0 10px; position:relative }
+  .etape .n{ position:relative; width:70px; height:70px; margin:0 auto 20px; border-radius:50%; display:grid; place-items:center;
+    font-size:24px; font-weight:800; color:var(--or2); background:radial-gradient(circle,#1d1b16,#0e0e11);
+    border:1px solid rgba(204,179,113,.35); box-shadow:0 0 30px rgba(204,179,113,.18) }
+  .etape .n:before{ content:""; position:absolute; inset:-7px; border-radius:50%;
+    background:conic-gradient(from var(--a),transparent 0 70%,#ccb371 90%,transparent);
+    -webkit-mask:radial-gradient(circle,transparent 66%,#000 68%); mask:radial-gradient(circle,transparent 66%,#000 68%);
+    animation:tourne 3s linear infinite }
+  .etape:nth-child(3) .n:before{ animation-delay:-1s } .etape:nth-child(4) .n:before{ animation-delay:-2s }
+  @keyframes tourne{ to{ --a:360deg } }
+  .etape h3{ margin:0 0 8px; font-size:18px } .etape p{ margin:0; color:var(--t2); font-size:14.5px }
+
+  /* Les chiffres, tous vrais */
+  .chiffres{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px }
+  .chiffre{ text-align:center; padding:30px 14px; border-radius:20px; border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(204,179,113,.06),transparent) }
+  .chiffre b{ display:block; font-size:46px; line-height:1; font-weight:800; letter-spacing:-1px; font-variant-numeric:tabular-nums }
+  .chiffre span{ display:block; margin-top:10px; color:var(--t2); font-size:14px }
 
   /* ── L'ACCES ── */
-  .acces{ display:grid; grid-template-columns:1fr 440px; gap:46px; align-items:start }
-  .carte{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.4) }
-  .onglets{ display:flex; gap:6px; margin-bottom:18px; background:var(--bg2); border:1px solid var(--border); border-radius:11px; padding:4px }
-  .onglets button{ flex:1; background:transparent; border:0; color:var(--t2); padding:9px; border-radius:8px; cursor:pointer; font:inherit; font-size:14px }
-  .onglets button.on{ background:var(--card2); color:var(--t1); font-weight:700 }
-  label{ display:block; font-size:11px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--t3); margin:0 0 6px }
-  input{ width:100%; padding:12px; margin-bottom:14px; border-radius:9px; border:1px solid var(--border);
-    background:var(--bg2); color:var(--t1); font:inherit; outline:none }
-  input:focus{ border-color:var(--or); box-shadow:0 0 0 3px rgba(204,179,113,.14) }
+  .acces{ display:grid; grid-template-columns:1fr 460px; gap:60px; align-items:center }
+  .points{ list-style:none; padding:0; margin:26px 0 0; display:grid; gap:14px }
+  .points li{ display:flex; gap:12px; color:var(--t2); font-size:15px }
+  .points li:before{ content:""; flex-shrink:0; width:20px; height:20px; margin-top:2px; border-radius:50%;
+    background:radial-gradient(circle,#ccb371 0 4px,rgba(204,179,113,.18) 5px); box-shadow:0 0 12px rgba(204,179,113,.3) }
+  .orbite{ position:relative; height:200px; margin-top:34px }
+  .orbite i{ position:absolute; left:50%; top:50%; border-radius:50%; border:1px solid rgba(204,179,113,.25); transform:translate(-50%,-50%) }
+  .orbite i:nth-child(1){ width:180px; height:180px; animation:orb 14s linear infinite }
+  .orbite i:nth-child(2){ width:120px; height:120px; animation:orb 9s linear infinite reverse; border-color:rgba(204,179,113,.4) }
+  .orbite i:nth-child(3){ width:62px; height:62px; background:radial-gradient(circle at 35% 30%,#fff1c4,#ccb371 45%,#6a4c16); border:0;
+    box-shadow:0 0 50px rgba(204,179,113,.6) }
+  .orbite i:nth-child(1):after,.orbite i:nth-child(2):after{ content:""; position:absolute; top:-5px; left:50%; width:9px; height:9px; margin-left:-4.5px;
+    border-radius:50%; background:#f6e3a8; box-shadow:0 0 14px #f6e3a8 }
+  @keyframes orb{ to{ transform:translate(-50%,-50%) rotate(360deg) } }
+
+  /* La carte, avec sa lumiere qui fait le tour */
+  .carte{ position:relative; border-radius:22px; padding:2px; isolation:isolate;
+    background:conic-gradient(from var(--a), rgba(204,179,113,.08) 0 60%, #ccb371 78%, #fff1c4 82%, rgba(204,179,113,.08) 92%);
+    animation:tourne 5s linear infinite; box-shadow:0 40px 100px rgba(0,0,0,.6), 0 0 60px rgba(204,179,113,.1) }
+  .carte-int{ border-radius:20px; padding:28px; background:linear-gradient(170deg,#18181c,#101013) }
+  .carte-int > div:not([hidden]){ animation:monte .55s cubic-bezier(.2,.8,.2,1) both }
+  .onglets{ position:relative; display:flex; margin-bottom:22px; background:#0c0c0f; border:1px solid var(--border); border-radius:12px; padding:4px }
+  .onglets:before{ content:""; position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); border-radius:9px;
+    background:linear-gradient(180deg,#26252a,#1c1b20); box-shadow:0 0 0 1px rgba(204,179,113,.35) inset, 0 6px 18px rgba(0,0,0,.4);
+    transition:transform .4s cubic-bezier(.3,.9,.3,1.1) }
+  .onglets:has(#o-connexion.on):before{ transform:translateX(100%) }
+  .onglets button{ position:relative; z-index:1; flex:1; background:transparent; border:0; color:var(--t2); padding:10px; border-radius:9px;
+    cursor:pointer; font:inherit; font-size:14px; transition:color .3s }
+  .onglets button.on{ color:var(--or2); font-weight:800 }
+  label{ display:block; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--t3); margin:0 0 7px }
+  .champ{ position:relative; margin-bottom:16px }
+  .champ input{ width:100%; padding:13px 14px; border-radius:11px; border:1px solid var(--border);
+    background:#0d0d10; color:var(--t1); font:inherit; outline:none; transition:border-color .25s, box-shadow .25s, background .25s }
+  .champ input::placeholder{ color:#4d4a45 }
+  .champ input:focus{ border-color:var(--or); background:#111014; box-shadow:0 0 0 4px rgba(204,179,113,.13), 0 0 30px rgba(204,179,113,.12) }
+  .champ:after{ content:""; position:absolute; left:12px; right:12px; bottom:0; height:2px; border-radius:2px; transform:scaleX(0);
+    background:linear-gradient(90deg,transparent,#f6e3a8,transparent); transition:transform .4s }
+  .champ:focus-within:after{ transform:scaleX(1) }
+  #bloc-mdp2:not([hidden]){ animation:monte .45s both }
   .large{ width:100% }
-  .lien{ text-align:right; margin:-6px 0 14px; font-size:13px }
-  #msg{ margin-top:16px; font-size:14px; color:var(--t2); padding:10px 12px; border-radius:9px;
-    border-left:2px solid var(--border); background:var(--bg2); display:none }
-  #msg.info,#msg.ok,#msg.erreur,#msg.attente{ display:block }
-  #msg.erreur{ border-left-color:var(--red); color:#f0b3c0 }
+  .lien{ text-align:right; margin:-8px 0 16px; font-size:13px }
+  #msg{ margin-top:16px; font-size:14px; color:var(--t2); padding:11px 13px; border-radius:10px;
+    border-left:2px solid var(--border); background:#0d0d10; display:none }
+  #msg.info,#msg.ok,#msg.erreur,#msg.attente{ display:block; animation:monte .4s both }
+  #msg.erreur{ border-left-color:var(--red); color:#f0b3c0; animation:secoue .45s }
   #msg.ok{ border-left-color:var(--green) }
   #msg.attente{ border-left-color:var(--or) }
-  .etat h3{ margin:0 0 6px; font-size:17px }
-  .etat p{ color:var(--t2); font-size:14px; margin:0 0 14px }
-  ol{ color:var(--t2); font-size:13.5px; padding-left:20px; margin:14px 0 0 }
-  ol li{ margin-bottom:6px }
-  .qui{ color:var(--t3); font-size:13px; margin:16px 0 0; display:flex; justify-content:space-between; gap:10px }
-  .points{ list-style:none; padding:0; margin:0; display:grid; gap:12px }
-  .points li{ display:flex; gap:11px; color:var(--t2) }
-  .points li::before{ content:""; flex-shrink:0; width:18px; height:18px; margin-top:3px; border-radius:50%;
-    background:radial-gradient(circle at 50% 50%, #ccb371 0 4px, rgba(204,179,113,.18) 5px) }
-  footer{ padding:34px 0 44px; border-top:1px solid rgba(255,255,255,.05); color:var(--t3); font-size:13px }
+  @keyframes secoue{ 20%,60%{ transform:translateX(-6px) } 40%,80%{ transform:translateX(6px) } }
+  .etat h3{ margin:0 0 6px; font-size:19px }
+  .etat p{ color:var(--t2); font-size:14px; margin:0 0 16px }
+  .coche{ width:58px; height:58px; margin-bottom:12px }
+  .coche circle{ stroke-dasharray:170; stroke-dashoffset:170; animation:trace 1s .1s forwards }
+  .coche path{ stroke-dasharray:50; stroke-dashoffset:50; animation:trace .6s .9s forwards }
+  @keyframes trace{ to{ stroke-dashoffset:0 } }
+  .sablier{ width:46px; height:46px; margin-bottom:10px; border-radius:50%; border:3px solid rgba(204,179,113,.2); border-top-color:var(--or);
+    animation:orb2 1.1s linear infinite }
+  @keyframes orb2{ to{ transform:rotate(360deg) } }
+  ol{ color:var(--t2); font-size:13.5px; padding-left:20px; margin:16px 0 0 } ol li{ margin-bottom:6px }
+  .qui{ color:var(--t3); font-size:13px; margin:18px 0 0; display:flex; justify-content:space-between; gap:10px }
+
+  footer{ padding:40px 0 50px; border-top:1px solid rgba(255,255,255,.05); color:var(--t3); font-size:13px }
   footer .cont{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap }
 
-  @media (max-width:900px){
-    h1{ font-size:36px }
-    .hero .cont,.acces{ grid-template-columns:1fr }
-    .grille,.etapes{ grid-template-columns:1fr }
-    header nav a.lienhaut{ display:none }
+  @media (max-width:960px){
+    h1{ font-size:42px } h2{ font-size:32px }
+    .hero{ align-items:flex-start; padding-top:100px; padding-bottom:470px }
+    .hero:after{ background:linear-gradient(180deg, rgba(8,8,10,.94) 0%, rgba(8,8,10,.6) 48%, rgba(8,8,10,0) 62%), linear-gradient(0deg, var(--bg) 0%, transparent 10%) }
+    .acces{ grid-template-columns:1fr; gap:34px }
+    .grille,.etapes{ grid-template-columns:1fr } .faisceau{ display:none }
+    .chiffres{ grid-template-columns:1fr 1fr }
+    header nav a.lienhaut{ display:none } .defile{ display:none }
+    .orbite{ display:none }
+  }
+  @media (max-width:560px){ .hero{ padding-bottom:540px } }
+  @media (max-width:420px){ header nav .bouton.vide{ display:none } }
+  @media (prefers-reduced-motion:reduce){
+    *,*:before,*:after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important }
+    h1 .m,.rv{ opacity:1; transform:none }
   }
 </style>
 </head>
 <body>
-<header>
+<header id="entete">
   <div class="cont">
     <div class="marque">
-      <svg width="32" height="26" viewBox="0 0 95 72" aria-hidden="true" style="filter:drop-shadow(0 2px 8px rgba(204,179,113,.45))">
+      <svg width="32" height="26" viewBox="0 0 95 72" aria-hidden="true">
         <defs>
           <linearGradient id="cf1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5d868"/><stop offset=".5" stop-color="#ccb371"/><stop offset="1" stop-color="#8a6018"/></linearGradient>
           <linearGradient id="cf2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe880"/><stop offset=".5" stop-color="#d4b040"/><stop offset="1" stop-color="#9a7020"/></linearGradient>
@@ -151,158 +265,179 @@
 </header>
 
 <section class="hero">
+  <div id="scene"></div>
   <div class="cont">
-    <div>
-      <span class="etiquette">Track record · coach IA</span>
-      <h1>Chaque trade mesuré.<br><span class="doree">Chaque erreur coachée.</span></h1>
+    <div class="texte">
+      <span class="etiquette"><i></i>Track record · coach IA</span>
+      <h1>
+        <span class="m" style="animation-delay:.15s">Chaque</span> <span class="m" style="animation-delay:.25s">trade</span>
+        <span class="m" style="animation-delay:.35s">mesuré.</span><br>
+        <span class="m doree" style="animation-delay:.55s,0s">Chaque</span> <span class="m doree" style="animation-delay:.65s,0s">erreur</span>
+        <span class="m doree" style="animation-delay:.75s,0s">coachée.</span>
+      </h1>
       <p class="chapeau">Track Metal tient ton track record sérieusement : chaque position mesurée en R, tes comptes et tes paliers de prop firm suivis au jour près, et un coach IA qui lit tes vrais chiffres — pas tes souvenirs.</p>
       <div class="actions">
-        <button class="bouton" data-aller="inscription">Créer mon compte</button>
+        <button class="bouton" data-aller="inscription">Créer mon compte
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <button class="bouton vide" data-aller="connexion">J’ai déjà un compte</button>
       </div>
-      <div class="rassure">Application Windows · tes trades restent sur ton ordinateur · chaque accès est activé à la main</div>
+      <div class="rassure"><span>Application Windows</span><span>Tes trades restent chez toi</span><span>Accès activé à la main</span></div>
     </div>
+  </div>
+  <div class="defile"><i></i>Découvrir</div>
+</section>
 
-    <div class="ecran" aria-hidden="true">
-      <span class="exemple">exemple d’écran</span>
-      <div class="barre"><i></i><i></i><i></i></div>
-      <div class="kpis">
-        <div class="kpi"><span>Win rate</span><b class="doree">58 %</b></div>
-        <div class="kpi"><span>R moyen</span><b style="color:var(--green)">+1,4 R</b></div>
-        <div class="kpi"><span>Drawdown max</span><b>3,2 %</b></div>
-      </div>
-      <div class="graph">
-        <svg viewBox="0 0 420 130" width="100%" height="130" preserveAspectRatio="none">
-          <defs><linearGradient id="aire" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ccb371" stop-opacity=".32"/><stop offset="1" stop-color="#ccb371" stop-opacity="0"/></linearGradient></defs>
-          <path d="M0 110 L30 104 L60 108 L90 92 L120 96 L150 80 L180 85 L210 66 L240 72 L270 54 L300 59 L330 42 L360 46 L390 28 L420 22 L420 130 L0 130 Z" fill="url(#aire)"/>
-          <path d="M0 110 L30 104 L60 108 L90 92 L120 96 L150 80 L180 85 L210 66 L240 72 L270 54 L300 59 L330 42 L360 46 L390 28 L420 22" fill="none" stroke="#ccb371" stroke-width="2.4"/>
-        </svg>
-      </div>
-      <div class="lignes">
-        <div class="ligne"><span>EURUSD</span><span class="b" style="width:78%"></span><span class="r" style="color:var(--green)">+2,1 R</span></div>
-        <div class="ligne"><span>GBPJPY</span><span class="b" style="width:30%;background:linear-gradient(90deg,#e0506e,#a03048)"></span><span class="r" style="color:var(--red)">−1,0 R</span></div>
-        <div class="ligne"><span>XAUUSD</span><span class="b" style="width:64%"></span><span class="r" style="color:var(--green)">+1,6 R</span></div>
-      </div>
+<div class="bandeau" aria-hidden="true">
+  <div class="piste">
+    <span><b>EURUSD</b> <em>Add-in</em> <span class="g">+2,1 R</span></span>
+    <span><b>GBPJPY</b> <em>Reversal</em> <span class="r">−1,0 R</span></span>
+    <span><b>XAUUSD</b> <em>Following</em> <span class="g">+1,6 R</span></span>
+    <span><b>NAS100</b> <em>Breakout</em> <span class="g">+3,0 R</span></span>
+    <span><b>USDJPY</b> <em>75 % fonda</em> <span class="g">+1,2 R</span></span>
+    <span><b>AUDNZD</b> <em>Retest</em> <span class="r">−0,5 R</span></span>
+    <span><b>GBPUSD</b> <em>50 % fonda · 50 % technique</em> <span class="g">+0,8 R</span></span>
+    <span><b>BTCUSD</b> <em>Reversal</em> <span class="g">+2,4 R</span></span>
+    <span><b>EURUSD</b> <em>Add-in</em> <span class="g">+2,1 R</span></span>
+    <span><b>GBPJPY</b> <em>Reversal</em> <span class="r">−1,0 R</span></span>
+    <span><b>XAUUSD</b> <em>Following</em> <span class="g">+1,6 R</span></span>
+    <span><b>NAS100</b> <em>Breakout</em> <span class="g">+3,0 R</span></span>
+    <span><b>USDJPY</b> <em>75 % fonda</em> <span class="g">+1,2 R</span></span>
+    <span><b>AUDNZD</b> <em>Retest</em> <span class="r">−0,5 R</span></span>
+    <span><b>GBPUSD</b> <em>50 % fonda · 50 % technique</em> <span class="g">+0,8 R</span></span>
+    <span><b>BTCUSD</b> <em>Reversal</em> <span class="g">+2,4 R</span></span>
+  </div>
+</div>
+
+<section class="bloc" id="fonctions">
+  <div class="cont">
+    <div class="titre-s rv">
+      <div class="mini">Ce que Track Metal mesure</div>
+      <h2>Tout ce que ton trading <span class="doree">a vraiment produit</span></h2>
+      <p class="sous">Pas un tableur de plus : un journal qui calcule, compare et te montre où tu gagnes — et où tu ne gagnes pas.</p>
+    </div>
+    <div class="grille">
+      <div class="fonc rv" style="--dl:.0s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg></div>
+        <h3>Chaque trade en R</h3><p>P&amp;L, R réalisé contre R visé, durée, calendrier mensuel, base filtrable par paire, stratégie, setup et session.</p></div>
+      <div class="fonc rv" style="--dl:.1s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg></div>
+        <h3>Prop firm et paliers</h3><p>Tes comptes de prop firm, leurs phases et leurs règles ; paliers de drawdown et de drawup suivis automatiquement.</p></div>
+      <div class="fonc rv" style="--dl:.2s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></div>
+        <h3>Un coach IA, dur mais juste</h3><p>Il lit tes chiffres déjà calculés et tes notes, et te dit sans détour ce qui te coûte.</p></div>
+      <div class="fonc rv" style="--dl:.0s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></div>
+        <h3>Tes setups, ton contrat</h3><p>Crée tes propres setups — Add-in, Breakout, Retest… — avec leurs confluences : chaque trade est jugé conforme ou hors contrat.</p></div>
+      <div class="fonc rv" style="--dl:.1s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg></div>
+        <h3>Fondamental et technique</h3><p>100 % fonda, 75 % fonda · 25 % technique, 50 / 50… Ta lecture de chaque devise est figée dans le trade, et tu vois ce que rapporte chaque dosage.</p></div>
+      <div class="fonc rv" style="--dl:.2s"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.8 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg></div>
+        <h3>Level Up</h3><p>Ta courbe de trader, au-delà du compte : discipline, régularité, progression — mesurées trade après trade.</p></div>
     </div>
   </div>
 </section>
 
-<section class="bloc" id="fonctions">
+<section class="bloc" style="padding-top:20px">
   <div class="cont">
-    <h2>Tout ce que ton trading <span class="doree">a vraiment produit</span></h2>
-    <p class="sous">Pas un tableur de plus : un journal qui calcule, compare et te montre où tu gagnes — et où tu ne gagnes pas.</p>
-    <div class="grille">
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg>
-        <h3>Chaque trade en R</h3><p>P&amp;L, R réalisé contre R visé, durée, calendrier mensuel, base filtrable par paire, stratégie, setup et session.</p>
-      </div>
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg>
-        <h3>Prop firm et paliers</h3><p>Tes comptes de prop firm, leurs phases et leurs règles ; paliers de drawdown et de drawup suivis automatiquement.</p>
-      </div>
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
-        <h3>Un coach IA, dur mais juste</h3><p>Il lit tes chiffres déjà calculés et tes notes, et te dit sans détour ce qui te coûte. Avec ta propre clé (Gemini a une offre gratuite).</p>
-      </div>
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>
-        <h3>Ton contrat de stratégie</h3><p>Confluences, confirmations, minimum requis : chaque trade est jugé conforme ou hors contrat, et la base s’en souvient.</p>
-      </div>
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg>
-        <h3>Fondamental et technique</h3><p>100 % fonda, 75/25, 50/50 ou 100 % technique : ta lecture de chaque devise est figée dans le trade, et tu vois ce que rapporte chaque dosage.</p>
-      </div>
-      <div class="fonc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.8 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
-        <h3>Level Up</h3><p>Ta courbe de trader, au-delà du compte : discipline, régularité, progression — mesurées trade après trade.</p>
-      </div>
+    <div class="chiffres">
+      <div class="chiffre rv" style="--dl:0s"><b class="doree" data-compte="5">5</b><span>crans entre fondamental et technique</span></div>
+      <div class="chiffre rv" style="--dl:.1s"><b class="doree">∞</b><span>setups — les tiens, à ton nom</span></div>
+      <div class="chiffre rv" style="--dl:.2s"><b class="doree" data-compte="100" data-suffixe=" %">100 %</b><span>de tes trades restent sur ton ordinateur</span></div>
+      <div class="chiffre rv" style="--dl:.3s"><b class="doree" data-compte="1">1</b><span>coach IA qui lit tes vrais chiffres</span></div>
     </div>
   </div>
 </section>
 
 <section class="bloc" id="comment">
   <div class="cont">
-    <h2>Comment ça marche</h2>
-    <p class="sous">Trois étapes, une seule fois.</p>
+    <div class="titre-s rv">
+      <div class="mini">Trois étapes</div>
+      <h2>Comment ça marche</h2>
+      <p class="sous">Une seule fois, et c’est parti.</p>
+    </div>
     <div class="etapes">
-      <div class="etape"><h3>Crée ton compte</h3><p>Ton e-mail et un mot de passe, ci-dessous. Tu confirmes ton adresse par le lien reçu.</p></div>
-      <div class="etape"><h3>Ton accès est activé</h3><p>Chaque accès Track Metal est validé à la main. Tu le vois ici dès qu’il l’est.</p></div>
-      <div class="etape"><h3>Télécharge et connecte-toi</h3><p>L’application Windows s’installe en un clic, se met à jour toute seule, et tes trades restent chez toi.</p></div>
+      <div class="faisceau"></div>
+      <div class="etape rv" style="--dl:0s"><div class="n">1</div><h3>Crée ton compte</h3><p>Ton e-mail et un mot de passe, ci-dessous. Tu confirmes ton adresse par le lien reçu.</p></div>
+      <div class="etape rv" style="--dl:.15s"><div class="n">2</div><h3>Ton accès est activé</h3><p>Chaque accès Track Metal est validé à la main. Tu le vois ici dès qu’il l’est.</p></div>
+      <div class="etape rv" style="--dl:.3s"><div class="n">3</div><h3>Télécharge et connecte-toi</h3><p>L’application Windows s’installe en un clic, se met à jour toute seule, et tes trades restent chez toi.</p></div>
     </div>
   </div>
 </section>
 
 <section class="bloc" id="acces">
   <div class="cont acces">
-    <div>
-      <h2>Ton accès <span class="doree">Track Metal</span></h2>
-      <p class="sous">Un compte, ton accès, ton application.</p>
+    <div class="rv">
+      <div class="titre-s" style="text-align:left;margin:0">
+        <div class="mini">Ton accès</div>
+        <h2>Entre dans <span class="doree">Track Metal</span></h2>
+        <p class="sous">Un compte, ton accès, ton application.</p>
+      </div>
       <ul class="points">
         <li>Tes trades, tes comptes et tes captures restent sur ton ordinateur — rien n’est envoyé ailleurs.</li>
         <li>Les mises à jour arrivent dans l’application : tu choisis quand les installer.</li>
-        <li>Le coach IA fonctionne avec ta propre clé : personne d’autre ne la voit.</li>
+        <li>Le coach IA travaille sur tes chiffres, et seulement les tiens.</li>
       </ul>
+      <div class="orbite" aria-hidden="true"><i></i><i></i><i></i></div>
     </div>
 
-    <div class="carte">
-      <!-- NON CONNECTE -->
-      <div id="v-entree">
-        <div class="onglets">
-          <button id="o-inscription" class="on">Créer un compte</button>
-          <button id="o-connexion">Se connecter</button>
+    <div class="carte rv" style="--dl:.15s">
+      <div class="carte-int">
+        <!-- NON CONNECTE -->
+        <div id="v-entree">
+          <div class="onglets">
+            <button id="o-inscription" class="on">Créer un compte</button>
+            <button id="o-connexion">Se connecter</button>
+          </div>
+          <label for="email">E-mail</label>
+          <div class="champ"><input id="email" type="email" autocomplete="username" spellcheck="false" placeholder="toi@exemple.com"></div>
+          <label for="mdp">Mot de passe</label>
+          <div class="champ"><input id="mdp" type="password" autocomplete="new-password" placeholder="8 caractères au moins"></div>
+          <div id="bloc-mdp2">
+            <label for="mdp2">Mot de passe, encore une fois</label>
+            <div class="champ"><input id="mdp2" type="password" autocomplete="new-password"></div>
+          </div>
+          <div class="lien" id="bloc-oubli" hidden><a id="a-oubli">Mot de passe oublié</a></div>
+          <button class="bouton large" id="b-valider">Créer mon compte Track Metal</button>
         </div>
-        <label for="email">E-mail</label>
-        <input id="email" type="email" autocomplete="username" spellcheck="false">
-        <label for="mdp">Mot de passe</label>
-        <input id="mdp" type="password" autocomplete="new-password">
-        <div id="bloc-mdp2">
-          <label for="mdp2">Mot de passe, encore une fois</label>
-          <input id="mdp2" type="password" autocomplete="new-password">
+
+        <!-- MOT DE PASSE OUBLIE -->
+        <div id="v-oubli" hidden>
+          <h3 style="margin:0 0 6px">Mot de passe oublié</h3>
+          <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Entre ton e-mail : tu recevras un lien pour en choisir un nouveau.</p>
+          <label for="email-oubli">E-mail</label>
+          <div class="champ"><input id="email-oubli" type="email" autocomplete="username" spellcheck="false"></div>
+          <button class="bouton large" id="b-oubli">Envoyer le lien</button>
+          <button class="bouton vide large" id="b-retour" style="margin-top:10px">Retour</button>
         </div>
-        <div class="lien" id="bloc-oubli" hidden><a id="a-oubli">Mot de passe oublié</a></div>
-        <button class="bouton large" id="b-valider">Créer mon compte Track Metal</button>
-      </div>
 
-      <!-- MOT DE PASSE OUBLIE -->
-      <div id="v-oubli" hidden>
-        <h3 style="margin:0 0 6px">Mot de passe oublié</h3>
-        <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Entre ton e-mail : tu recevras un lien pour en choisir un nouveau.</p>
-        <label for="email-oubli">E-mail</label>
-        <input id="email-oubli" type="email" autocomplete="username" spellcheck="false">
-        <button class="bouton large" id="b-oubli">Envoyer le lien</button>
-        <button class="bouton vide large" id="b-retour" style="margin-top:10px">Retour</button>
-      </div>
-
-      <!-- NOUVEAU MOT DE PASSE (arrivee par le lien recu) -->
-      <div id="v-nouveau" hidden>
-        <h3 style="margin:0 0 6px">Nouveau mot de passe</h3>
-        <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Huit caractères au moins.</p>
-        <label for="mdp-nouveau">Nouveau mot de passe</label>
-        <input id="mdp-nouveau" type="password" autocomplete="new-password">
-        <button class="bouton large" id="b-nouveau">Enregistrer</button>
-      </div>
-
-      <!-- CONNECTE -->
-      <div id="v-compte" hidden>
-        <div class="etat" id="c-attente" hidden>
-          <h3>Accès en attente d’activation</h3>
-          <p>Ton compte est créé. Ton accès Track Metal est activé à la main : reviens ici une fois qu’il te l’a été confirmé.</p>
-          <button class="bouton vide large" id="b-reverifier">Vérifier à nouveau</button>
+        <!-- NOUVEAU MOT DE PASSE (arrivee par le lien recu) -->
+        <div id="v-nouveau" hidden>
+          <h3 style="margin:0 0 6px">Nouveau mot de passe</h3>
+          <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Huit caractères au moins.</p>
+          <label for="mdp-nouveau">Nouveau mot de passe</label>
+          <div class="champ"><input id="mdp-nouveau" type="password" autocomplete="new-password"></div>
+          <button class="bouton large" id="b-nouveau">Enregistrer</button>
         </div>
-        <div class="etat" id="c-valide" hidden>
-          <h3>Accès activé</h3>
-          <p>Tu peux télécharger Track Metal pour Windows.</p>
-          <button class="bouton large" id="b-telecharger">Télécharger Track Metal</button>
-          <ol>
-            <li>Ouvre le fichier téléchargé. Windows peut afficher « Windows a protégé votre ordinateur » : l’application n’est pas signée par un éditeur payant. Clique sur <b>Informations complémentaires</b>, puis <b>Exécuter quand même</b>.</li>
-            <li>Connecte-toi dans l’application avec ce même compte.</li>
-            <li>Pour le coach IA : <b>Paramètres → Réglages du coach</b>, avec ta propre clé.</li>
-          </ol>
-        </div>
-        <div class="qui"><span id="qui"></span><a id="a-deconnexion">Se déconnecter</a></div>
-      </div>
 
-      <div id="msg"></div>
+        <!-- CONNECTE -->
+        <div id="v-compte" hidden>
+          <div class="etat" id="c-attente" hidden>
+            <div class="sablier"></div>
+            <h3>Accès en attente d’activation</h3>
+            <p>Ton compte est créé. Ton accès Track Metal est activé à la main : reviens ici une fois qu’il te l’a été confirmé.</p>
+            <button class="bouton vide large" id="b-reverifier">Vérifier à nouveau</button>
+          </div>
+          <div class="etat" id="c-valide" hidden>
+            <svg class="coche" viewBox="0 0 60 60" fill="none" stroke="#27b870" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="30" cy="30" r="26"/><path d="M19 31l7 7 15-16"/></svg>
+            <h3>Accès activé</h3>
+            <p>Tu peux télécharger Track Metal pour Windows.</p>
+            <button class="bouton large" id="b-telecharger">Télécharger Track Metal</button>
+            <ol>
+              <li>Ouvre le fichier téléchargé. Windows peut afficher « Windows a protégé votre ordinateur » : l’application n’est pas signée par un éditeur payant. Clique sur <b>Informations complémentaires</b>, puis <b>Exécuter quand même</b>.</li>
+              <li>Connecte-toi dans l’application avec ce même compte.</li>
+            </ol>
+          </div>
+          <div class="qui"><span id="qui"></span><a id="a-deconnexion">Se déconnecter</a></div>
+        </div>
+
+        <div id="msg"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -316,6 +451,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"
         integrity="sha384-K1nraABOP/zFehpLIUksXebbs7jMpB8gYMlb+uhVKZcWT/9Vkq1+qhv6ndC+1Yuz" crossorigin="anonymous"></script>
+<script src="scene.js"></script>
+<script src="anim.js"></script>
 <script src="page.js"></script>
 </body>
 </html>
