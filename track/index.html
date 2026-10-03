@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co; img-src 'self' data:; form-action 'none'; base-uri 'none'">
+<title>Track Metal — chaque trade mesuré, chaque erreur coachée</title>
+<meta name="description" content="Track Metal : ton track record de trader, chaque trade mesuré en R, tes paliers de prop firm suivis, et un coach IA qui lit tes vrais chiffres.">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#0c0c0e; --bg2:#111113; --card:#17171a; --card2:#1d1d21; --border:#2c2c29;
+    --t1:#ecebe7; --t2:#a9a59e; --t3:#74716c;
+    --or:#ccb371; --or2:#e6ce93; --red:#e0506e; --green:#27b870;
+  }
+  *{ box-sizing:border-box }
+  html,body{ margin:0; background:var(--bg); color:var(--t1);
+    font:15px/1.6 "Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,sans-serif }
+  a{ color:var(--t2); text-decoration:none; cursor:pointer }
+  a:hover{ color:var(--or2) }
+  .doree{ background:linear-gradient(90deg,#f2dea4,#ccb371,#e8cf94); -webkit-background-clip:text; background-clip:text; color:transparent }
+  .cont{ max-width:1120px; margin:0 auto; padding:0 22px }
+  [hidden]{ display:none !important }
+
+  /* ── EN-TETE ── */
+  header{ position:sticky; top:0; z-index:10; background:rgba(12,12,14,.82); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.05) }
+  header .cont{ display:flex; align-items:center; gap:12px; height:62px }
+  .marque{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:17px }
+  header nav{ margin-left:auto; display:flex; gap:22px; align-items:center; font-size:14px }
+  .bouton{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font:inherit; font-weight:800; cursor:pointer;
+    border-radius:10px; padding:11px 20px; border:0; background:linear-gradient(180deg,#d8bf7d,#ccb371); color:#15130d;
+    box-shadow:0 8px 26px rgba(204,179,113,.2) }
+  .bouton:hover{ background:var(--or2) }
+  .bouton.vide{ background:transparent; color:var(--t1); border:1px solid var(--border); box-shadow:none }
+  .bouton.vide:hover{ border-color:var(--t3) }
+  .bouton.petit{ padding:8px 15px; font-size:13.5px }
+
+  /* ── HERO ── */
+  .hero{ position:relative; overflow:hidden; padding:72px 0 64px;
+    background:radial-gradient(900px 480px at 15% 0%, rgba(204,179,113,.14), transparent 60%),
+               radial-gradient(700px 420px at 100% 30%, rgba(204,179,113,.07), transparent 60%) }
+  .hero .cont{ display:grid; grid-template-columns:1.05fr .95fr; gap:46px; align-items:center }
+  .etiquette{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--or2);
+    border:1px solid rgba(204,179,113,.3); border-radius:999px; padding:5px 12px; margin-bottom:18px; background:rgba(204,179,113,.06) }
+  h1{ font-size:48px; line-height:1.06; letter-spacing:-1px; margin:0 0 18px; font-weight:800 }
+  .chapeau{ font-size:17px; color:var(--t2); margin:0 0 28px; max-width:540px }
+  .actions{ display:flex; gap:12px; flex-wrap:wrap }
+  .rassure{ margin-top:18px; font-size:13px; color:var(--t3) }
+
+  /* l'exemple d'ecran */
+  .ecran{ position:relative; background:linear-gradient(180deg,#18181b,#121214); border:1px solid var(--border); border-radius:18px;
+    padding:18px; box-shadow:0 30px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(204,179,113,.08) }
+  .ecran .barre{ display:flex; gap:6px; margin-bottom:14px }
+  .ecran .barre i{ width:9px; height:9px; border-radius:50%; background:#2c2c29 }
+  .kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px }
+  .kpi{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 12px }
+  .kpi span{ display:block; font-size:10.5px; color:var(--t3); text-transform:uppercase; letter-spacing:.6px }
+  .kpi b{ display:block; font-size:20px; margin-top:3px; font-variant-numeric:tabular-nums }
+  .graph{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px }
+  .lignes{ margin-top:12px; display:grid; gap:7px }
+  .ligne{ display:grid; grid-template-columns:70px 1fr 70px; gap:10px; align-items:center; font-size:12px; color:var(--t2);
+    background:var(--card); border:1px solid var(--border); border-radius:9px; padding:8px 10px }
+  .ligne .b{ height:6px; border-radius:3px; background:linear-gradient(90deg,#ccb371,#e6ce93) }
+  .ligne .r{ text-align:right; font-weight:700; font-variant-numeric:tabular-nums }
+  .exemple{ position:absolute; top:14px; right:16px; font-size:10.5px; color:var(--t3) }
+
+  /* ── SECTIONS ── */
+  section.bloc{ padding:70px 0; border-top:1px solid rgba(255,255,255,.04); scroll-margin-top:40px }
+  h2{ font-size:32px; letter-spacing:-.5px; margin:0 0 10px; font-weight:800 }
+  .sous{ color:var(--t2); margin:0 0 34px; max-width:640px }
+  .grille{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px }
+  .fonc{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 20px; transition:border-color .2s, transform .2s }
+  .fonc:hover{ border-color:rgba(204,179,113,.35); transform:translateY(-2px) }
+  .fonc svg{ width:26px; height:26px; color:var(--or); margin-bottom:12px }
+  .fonc h3{ margin:0 0 6px; font-size:16px }
+  .fonc p{ margin:0; color:var(--t2); font-size:14px }
+  .etapes{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; counter-reset:e }
+  .etape{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 20px; counter-increment:e }
+  .etape::before{ content:counter(e); display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%;
+    background:rgba(204,179,113,.12); color:var(--or2); font-weight:800; margin-bottom:12px }
+  .etape h3{ margin:0 0 6px; font-size:16px }
+  .etape p{ margin:0; color:var(--t2); font-size:14px }
+
+  /* ── L'ACCES ── */
+  .acces{ display:grid; grid-template-columns:1fr 440px; gap:46px; align-items:start }
+  .carte{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.4) }
+  .onglets{ display:flex; gap:6px; margin-bottom:18px; background:var(--bg2); border:1px solid var(--border); border-radius:11px; padding:4px }
+  .onglets button{ flex:1; background:transparent; border:0; color:var(--t2); padding:9px; border-radius:8px; cursor:pointer; font:inherit; font-size:14px }
+  .onglets button.on{ background:var(--card2); color:var(--t1); font-weight:700 }
+  label{ display:block; font-size:11px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--t3); margin:0 0 6px }
+  input{ width:100%; padding:12px; margin-bottom:14px; border-radius:9px; border:1px solid var(--border);
+    background:var(--bg2); color:var(--t1); font:inherit; outline:none }
+  input:focus{ border-color:var(--or); box-shadow:0 0 0 3px rgba(204,179,113,.14) }
+  .large{ width:100% }
+  .lien{ text-align:right; margin:-6px 0 14px; font-size:13px }
+  #msg{ margin-top:16px; font-size:14px; color:var(--t2); padding:10px 12px; border-radius:9px;
+    border-left:2px solid var(--border); background:var(--bg2); display:none }
+  #msg.info,#msg.ok,#msg.erreur,#msg.attente{ display:block }
+  #msg.erreur{ border-left-color:var(--red); color:#f0b3c0 }
+  #msg.ok{ border-left-color:var(--green) }
+  #msg.attente{ border-left-color:var(--or) }
+  .etat h3{ margin:0 0 6px; font-size:17px }
+  .etat p{ color:var(--t2); font-size:14px; margin:0 0 14px }
+  ol{ color:var(--t2); font-size:13.5px; padding-left:20px; margin:14px 0 0 }
+  ol li{ margin-bottom:6px }
+  .qui{ color:var(--t3); font-size:13px; margin:16px 0 0; display:flex; justify-content:space-between; gap:10px }
+  .points{ list-style:none; padding:0; margin:0; display:grid; gap:12px }
+  .points li{ display:flex; gap:11px; color:var(--t2) }
+  .points li::before{ content:""; flex-shrink:0; width:18px; height:18px; margin-top:3px; border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, #ccb371 0 4px, rgba(204,179,113,.18) 5px) }
+  footer{ padding:34px 0 44px; border-top:1px solid rgba(255,255,255,.05); color:var(--t3); font-size:13px }
+  footer .cont{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap }
+
+  @media (max-width:900px){
+    h1{ font-size:36px }
+    .hero .cont,.acces{ grid-template-columns:1fr }
+    .grille,.etapes{ grid-template-columns:1fr }
+    header nav a.lienhaut{ display:none }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="cont">
+    <div class="marque">
+      <svg width="32" height="26" viewBox="0 0 95 72" aria-hidden="true" style="filter:drop-shadow(0 2px 8px rgba(204,179,113,.45))">
+        <defs>
+          <linearGradient id="cf1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5d868"/><stop offset=".5" stop-color="#ccb371"/><stop offset="1" stop-color="#8a6018"/></linearGradient>
+          <linearGradient id="cf2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe880"/><stop offset=".5" stop-color="#d4b040"/><stop offset="1" stop-color="#9a7020"/></linearGradient>
+          <linearGradient id="cf3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4a030"/><stop offset=".5" stop-color="#a07820"/><stop offset="1" stop-color="#604808"/></linearGradient>
+        </defs>
+        <line x1="14" y1="4" x2="14" y2="60" stroke="#ccb371" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="8" y="14" width="12" height="38" rx="1" fill="url(#cf1)"/>
+        <line x1="44" y1="1" x2="44" y2="68" stroke="#d4b040" stroke-width="2" stroke-linecap="round"/>
+        <rect x="37" y="10" width="14" height="50" rx="1" fill="url(#cf2)"/>
+        <line x1="75" y1="18" x2="75" y2="63" stroke="#a08028" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="68" y="26" width="13" height="28" rx="1" fill="url(#cf3)"/>
+      </svg>
+      <span class="doree">Track Metal</span>
+    </div>
+    <nav>
+      <a class="lienhaut" href="#fonctions">Fonctions</a>
+      <a class="lienhaut" href="#comment">Comment ça marche</a>
+      <button class="bouton vide petit" data-aller="connexion">Se connecter</button>
+      <button class="bouton petit" data-aller="inscription">Commencer</button>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="cont">
+    <div>
+      <span class="etiquette">Track record · coach IA</span>
+      <h1>Chaque trade mesuré.<br><span class="doree">Chaque erreur coachée.</span></h1>
+      <p class="chapeau">Track Metal tient ton track record sérieusement : chaque position mesurée en R, tes comptes et tes paliers de prop firm suivis au jour près, et un coach IA qui lit tes vrais chiffres — pas tes souvenirs.</p>
+      <div class="actions">
+        <button class="bouton" data-aller="inscription">Créer mon compte</button>
+        <button class="bouton vide" data-aller="connexion">J’ai déjà un compte</button>
+      </div>
+      <div class="rassure">Application Windows · tes trades restent sur ton ordinateur · chaque accès est activé à la main</div>
+    </div>
+
+    <div class="ecran" aria-hidden="true">
+      <span class="exemple">exemple d’écran</span>
+      <div class="barre"><i></i><i></i><i></i></div>
+      <div class="kpis">
+        <div class="kpi"><span>Win rate</span><b class="doree">58 %</b></div>
+        <div class="kpi"><span>R moyen</span><b style="color:var(--green)">+1,4 R</b></div>
+        <div class="kpi"><span>Drawdown max</span><b>3,2 %</b></div>
+      </div>
+      <div class="graph">
+        <svg viewBox="0 0 420 130" width="100%" height="130" preserveAspectRatio="none">
+          <defs><linearGradient id="aire" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ccb371" stop-opacity=".32"/><stop offset="1" stop-color="#ccb371" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0 110 L30 104 L60 108 L90 92 L120 96 L150 80 L180 85 L210 66 L240 72 L270 54 L300 59 L330 42 L360 46 L390 28 L420 22 L420 130 L0 130 Z" fill="url(#aire)"/>
+          <path d="M0 110 L30 104 L60 108 L90 92 L120 96 L150 80 L180 85 L210 66 L240 72 L270 54 L300 59 L330 42 L360 46 L390 28 L420 22" fill="none" stroke="#ccb371" stroke-width="2.4"/>
+        </svg>
+      </div>
+      <div class="lignes">
+        <div class="ligne"><span>EURUSD</span><span class="b" style="width:78%"></span><span class="r" style="color:var(--green)">+2,1 R</span></div>
+        <div class="ligne"><span>GBPJPY</span><span class="b" style="width:30%;background:linear-gradient(90deg,#e0506e,#a03048)"></span><span class="r" style="color:var(--red)">−1,0 R</span></div>
+        <div class="ligne"><span>XAUUSD</span><span class="b" style="width:64%"></span><span class="r" style="color:var(--green)">+1,6 R</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bloc" id="fonctions">
+  <div class="cont">
+    <h2>Tout ce que ton trading <span class="doree">a vraiment produit</span></h2>
+    <p class="sous">Pas un tableur de plus : un journal qui calcule, compare et te montre où tu gagnes — et où tu ne gagnes pas.</p>
+    <div class="grille">
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg>
+        <h3>Chaque trade en R</h3><p>P&amp;L, R réalisé contre R visé, durée, calendrier mensuel, base filtrable par paire, stratégie, setup et session.</p>
+      </div>
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg>
+        <h3>Prop firm et paliers</h3><p>Tes comptes de prop firm, leurs phases et leurs règles ; paliers de drawdown et de drawup suivis automatiquement.</p>
+      </div>
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        <h3>Un coach IA, dur mais juste</h3><p>Il lit tes chiffres déjà calculés et tes notes, et te dit sans détour ce qui te coûte. Avec ta propre clé (Gemini a une offre gratuite).</p>
+      </div>
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>
+        <h3>Ton contrat de stratégie</h3><p>Confluences, confirmations, minimum requis : chaque trade est jugé conforme ou hors contrat, et la base s’en souvient.</p>
+      </div>
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg>
+        <h3>Fondamental et technique</h3><p>100 % fonda, 75/25, 50/50 ou 100 % technique : ta lecture de chaque devise est figée dans le trade, et tu vois ce que rapporte chaque dosage.</p>
+      </div>
+      <div class="fonc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.8 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
+        <h3>Level Up</h3><p>Ta courbe de trader, au-delà du compte : discipline, régularité, progression — mesurées trade après trade.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bloc" id="comment">
+  <div class="cont">
+    <h2>Comment ça marche</h2>
+    <p class="sous">Trois étapes, une seule fois.</p>
+    <div class="etapes">
+      <div class="etape"><h3>Crée ton compte</h3><p>Ton e-mail et un mot de passe, ci-dessous. Tu confirmes ton adresse par le lien reçu.</p></div>
+      <div class="etape"><h3>Ton accès est activé</h3><p>Chaque accès Track Metal est validé à la main. Tu le vois ici dès qu’il l’est.</p></div>
+      <div class="etape"><h3>Télécharge et connecte-toi</h3><p>L’application Windows s’installe en un clic, se met à jour toute seule, et tes trades restent chez toi.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="bloc" id="acces">
+  <div class="cont acces">
+    <div>
+      <h2>Ton accès <span class="doree">Track Metal</span></h2>
+      <p class="sous">Un compte, ton accès, ton application.</p>
+      <ul class="points">
+        <li>Tes trades, tes comptes et tes captures restent sur ton ordinateur — rien n’est envoyé ailleurs.</li>
+        <li>Les mises à jour arrivent dans l’application : tu choisis quand les installer.</li>
+        <li>Le coach IA fonctionne avec ta propre clé : personne d’autre ne la voit.</li>
+      </ul>
+    </div>
+
+    <div class="carte">
+      <!-- NON CONNECTE -->
+      <div id="v-entree">
+        <div class="onglets">
+          <button id="o-inscription" class="on">Créer un compte</button>
+          <button id="o-connexion">Se connecter</button>
+        </div>
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="username" spellcheck="false">
+        <label for="mdp">Mot de passe</label>
+        <input id="mdp" type="password" autocomplete="new-password">
+        <div id="bloc-mdp2">
+          <label for="mdp2">Mot de passe, encore une fois</label>
+          <input id="mdp2" type="password" autocomplete="new-password">
+        </div>
+        <div class="lien" id="bloc-oubli" hidden><a id="a-oubli">Mot de passe oublié</a></div>
+        <button class="bouton large" id="b-valider">Créer mon compte Track Metal</button>
+      </div>
+
+      <!-- MOT DE PASSE OUBLIE -->
+      <div id="v-oubli" hidden>
+        <h3 style="margin:0 0 6px">Mot de passe oublié</h3>
+        <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Entre ton e-mail : tu recevras un lien pour en choisir un nouveau.</p>
+        <label for="email-oubli">E-mail</label>
+        <input id="email-oubli" type="email" autocomplete="username" spellcheck="false">
+        <button class="bouton large" id="b-oubli">Envoyer le lien</button>
+        <button class="bouton vide large" id="b-retour" style="margin-top:10px">Retour</button>
+      </div>
+
+      <!-- NOUVEAU MOT DE PASSE (arrivee par le lien recu) -->
+      <div id="v-nouveau" hidden>
+        <h3 style="margin:0 0 6px">Nouveau mot de passe</h3>
+        <p style="color:var(--t2);font-size:14px;margin:0 0 16px">Huit caractères au moins.</p>
+        <label for="mdp-nouveau">Nouveau mot de passe</label>
+        <input id="mdp-nouveau" type="password" autocomplete="new-password">
+        <button class="bouton large" id="b-nouveau">Enregistrer</button>
+      </div>
+
+      <!-- CONNECTE -->
+      <div id="v-compte" hidden>
+        <div class="etat" id="c-attente" hidden>
+          <h3>Accès en attente d’activation</h3>
+          <p>Ton compte est créé. Ton accès Track Metal est activé à la main : reviens ici une fois qu’il te l’a été confirmé.</p>
+          <button class="bouton vide large" id="b-reverifier">Vérifier à nouveau</button>
+        </div>
+        <div class="etat" id="c-valide" hidden>
+          <h3>Accès activé</h3>
+          <p>Tu peux télécharger Track Metal pour Windows.</p>
+          <button class="bouton large" id="b-telecharger">Télécharger Track Metal</button>
+          <ol>
+            <li>Ouvre le fichier téléchargé. Windows peut afficher « Windows a protégé votre ordinateur » : l’application n’est pas signée par un éditeur payant. Clique sur <b>Informations complémentaires</b>, puis <b>Exécuter quand même</b>.</li>
+            <li>Connecte-toi dans l’application avec ce même compte.</li>
+            <li>Pour le coach IA : <b>Paramètres → Réglages du coach</b>, avec ta propre clé.</li>
+          </ol>
+        </div>
+        <div class="qui"><span id="qui"></span><a id="a-deconnexion">Se déconnecter</a></div>
+      </div>
+
+      <div id="msg"></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="cont">
+    <span><span class="doree" style="font-weight:800">Track Metal</span> · chaque trade mesuré, chaque erreur coachée</span>
+    <span>Créé par Isaac Kabasele · accès privé</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"
+        integrity="sha384-K1nraABOP/zFehpLIUksXebbs7jMpB8gYMlb+uhVKZcWT/9Vkq1+qhv6ndC+1Yuz" crossorigin="anonymous"></script>
+<script src="page.js"></script>
+</body>
+</html>
