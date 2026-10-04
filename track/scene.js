@@ -34,14 +34,18 @@
     + '.ts-fond{position:absolute;inset:0;width:100%;height:100%;display:block}'
     + '.ts-scene{position:absolute;perspective:1300px;perspective-origin:50% 40%}'
     + '.ts-rig{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}'
-    + '.ts-c{position:absolute;transform-style:preserve-3d;border-radius:16px;'
-    + 'background:linear-gradient(160deg,rgba(32,31,36,.88),rgba(16,16,19,.9));'
+    // FLUIDITE (03/10/2026) : plus de flou d'arriere-plan (recalcule a chaque
+    // image au-dessus d'un canevas anime, il divisait la cadence par deux), et
+    // un reflet qui GLISSE (transform, calcule par la carte graphique) au lieu
+    // d'un degrade qu'on repeignait a chaque image.
+    + '.ts-c{position:absolute;overflow:hidden;border-radius:16px;'
+    + 'background:linear-gradient(160deg,rgba(30,29,34,.94),rgba(15,15,18,.96));'
     + 'border:1px solid rgba(204,179,113,.22);box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03) inset,0 0 40px rgba(204,179,113,.06);'
-    + 'backdrop-filter:blur(6px);color:#ecebe7;font-family:inherit}'
-    + '.ts-c:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;'
-    + 'background:linear-gradient(115deg,transparent 30%,rgba(255,236,180,.10) 45%,transparent 60%);background-size:250% 100%;'
-    + 'animation:ts-reflet 7s linear infinite}'
-    + '@keyframes ts-reflet{0%{background-position:120% 0}100%{background-position:-120% 0}}'
+    + 'color:#ecebe7;font-family:inherit}'
+    + '.ts-c:before{content:"";position:absolute;top:0;bottom:0;left:-60%;width:60%;pointer-events:none;'
+    + 'background:linear-gradient(105deg,transparent,rgba(255,236,180,.09) 50%,transparent);'
+    + 'animation:ts-reflet 7s cubic-bezier(.45,0,.25,1) infinite;will-change:transform}'
+    + '@keyframes ts-reflet{0%,35%{transform:translateX(0)}100%{transform:translateX(370%)}}'
     + '@keyframes ts-flotte{0%,100%{translate:0 0}50%{translate:0 -10px}}'
     + '.ts-flotte{animation:ts-flotte var(--d,6s) ease-in-out infinite}'
     + '.ts-et{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8d897f}'
@@ -99,130 +103,167 @@
   }
 
   // ── LE CANEVAS : sol, poussiere d'or, anneau de bougies ────────────────────
+  // FLUIDE, PAS MECANIQUE (Isaac, 03/10/2026 : « les bougies qui tournent
+  // doivent etre fluides, pas mecaniques »). Ce qui faisait mecanique :
+  //   · toutes les 380 ms une bougie etait retiree et TOUTES les autres
+  //     sautaient d'une place (9°) — une saccade par-dessus la rotation ;
+  //   · la vitesse comptait les images, pas le temps : elle variait avec la
+  //     charge de la machine.
+  // Desormais tout est fonction du TEMPS : chaque bougie garde sa place sur
+  // l'anneau, et ses prix suivent une vague continue qui coule autour de lui.
+  // Une bougie ne saute jamais : elle se gonfle, se creuse, et sa couleur
+  // glisse du rouge au vert quand la pente change.
   function Fond(cv, o) {
     var ctx = cv.getContext('2d'), L = 0, H = 0, dpr = 1;
     var al = graine(7);
     var N = o.compact ? 46 : 90;
     var poussiere = [];
-    for (var i = 0; i < N; i++) poussiere.push({ x: (al() - .5) * 26, y: (al() - .3) * 9, z: al() * 30 + 2, v: .15 + al() * .35, r: .6 + al() * 1.6 });
-    // L'anneau : des bougies sur un cercle, une marche au hasard pour leurs prix.
-    var NB = o.compact ? 30 : 40, bougies = [], p = 0;
-    for (i = 0; i < NB; i++) bougies.push(nouvelle());
-    function nouvelle() {
-      var ouv = p, clo = p + (al() - .46) * 1.1, hau = Math.max(ouv, clo) + al() * .5, bas = Math.min(ouv, clo) - al() * .5;
-      p = clo; if (p > 3) p -= .8; if (p < -3) p += .8;
-      return { o: ouv, c: clo, h: hau, l: bas, nait: 0 };
-    }
+    for (var i = 0; i < N; i++) poussiere.push({ x: (al() - .5) * 26, y: (al() - .3) * 9, z: al() * 30 + 2, v: .15 + al() * .35, r: .6 + al() * 1.6, ph: al() * 6.28 });
+    var NB = o.compact ? 34 : 46;
     // L'anneau est assez grand pour tourner AUTOUR des cartes, et assez
     // incline pour qu'on voie ses bougies passer au-dessus et en dessous.
     var BASE = .52;
-    var rot = 0, inclX = BASE, cibleX = BASE, cibleY = 0, inclY = 0, t0 = performance.now(), dernierTick = 0;
+    var rot = 0, inclX = BASE, cibleX = BASE, cibleY = 0, inclY = 0, t0 = performance.now(), avant = t0;
 
     function taille() {
       var r = cv.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // 1,5 suffit pour un decor : au-dela, on remplit quatre fois plus de
+      // points pour une difference que l'oeil ne voit pas.
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       L = Math.max(1, r.width); H = Math.max(1, r.height);
       cv.width = Math.round(L * dpr); cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      grille = null;
     }
-    // Une projection en perspective toute simple.
+    // Les lignes du sol qui fuient vers l'horizon ne bougent pas : on les
+    // dessine UNE fois, puis on recopie l'image a chaque tour.
+    var grille = null;
+    function grilleFixe(f, cx, cyS, sol) {
+      if (grille) return grille;
+      grille = document.createElement('canvas');
+      grille.width = cv.width; grille.height = cv.height;
+      var g2 = grille.getContext('2d'); g2.setTransform(dpr, 0, 0, dpr, 0, 0); g2.lineWidth = 1;
+      for (var x = -30; x <= 30; x += 2) {
+        var a2 = proj(x, -sol, 1.2, cx, cyS, f * .32), b2 = proj(x, -sol, 34, cx, cyS, f * .32);
+        var lg = g2.createLinearGradient(a2[0], a2[1], b2[0], b2[1]);
+        lg.addColorStop(0, 'rgba(204,179,113,.20)'); lg.addColorStop(1, 'rgba(204,179,113,0)');
+        g2.strokeStyle = lg; g2.beginPath(); g2.moveTo(a2[0], a2[1]); g2.lineTo(b2[0], b2[1]); g2.stroke();
+      }
+      return grille;
+    }
     function proj(x, y, z, cx, cy, f) { var k = f / (z + 0.0001); return [cx + x * k, cy - y * k, k]; }
+    // Le « prix » en un point de l'anneau : trois houles superposees, qui
+    // avancent chacune a sa vitesse. Continu dans l'espace ET dans le temps.
+    function prix(a, t) {
+      return 1.05 * Math.sin(2 * a + .32 * t) + .55 * Math.sin(5 * a - .5 * t + 1.3) + .26 * Math.sin(9 * a + .74 * t + .4);
+    }
+    // Du rouge au vert, en passant par l'or quand la bougie est presque plate.
+    function teinte(pente) {
+      var m = Math.max(-1, Math.min(1, pente * 2.4));
+      var de = m < 0 ? [224, 80, 110] : [39, 184, 112], mil = [204, 179, 113], k = Math.abs(m);
+      return [Math.round(mil[0] + (de[0] - mil[0]) * k), Math.round(mil[1] + (de[1] - mil[1]) * k), Math.round(mil[2] + (de[2] - mil[2]) * k)];
+    }
+    function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a.toFixed(3) + ')'; }
 
     function dessiner(now) {
       var t = (now - t0) / 1000;
+      var dt = Math.min(.05, Math.max(0, (now - avant) / 1000)); avant = now;
+      var vit = LENT ? .2 : 1;
       ctx.clearRect(0, 0, L, H);
       var f = Math.min(L, H) * 1.05;
 
-      // 1. Le halo de l'horizon
+      // 1. Le halo de l'horizon, qui respire lentement
       var hy = H * (o.compact ? .58 : .62);
-      var g = ctx.createRadialGradient(L * (o.anneauX || .5), hy, 10, L * (o.anneauX || .5), hy, Math.max(L, H) * .7);
+      var g = ctx.createRadialGradient(L * (o.anneauX || .5), hy, 10, L * (o.anneauX || .5), hy, Math.max(L, H) * (.66 + .04 * Math.sin(t * .5)));
       g.addColorStop(0, 'rgba(204,179,113,.16)'); g.addColorStop(1, 'rgba(204,179,113,0)');
       ctx.fillStyle = g; ctx.fillRect(0, 0, L, H);
 
-      // 2. Le sol : une grille d'or qui avance vers nous
-      var cx = L * .5, cyS = hy, sol = 2.2, pas = 1.6, dec = (t * (LENT ? .15 : .9)) % pas;
+      // 2. Le sol : une grille d'or qui glisse vers nous
+      var cx = L * .5, cyS = hy, sol = 2.2, pas = 1.6, dec = (t * .9 * vit) % pas;
       ctx.lineWidth = 1;
       for (var z = pas - dec; z < 34; z += pas) {
         var a = proj(-30, -sol, z, cx, cyS, f * .32), b = proj(30, -sol, z, cx, cyS, f * .32);
-        var fade = Math.max(0, 1 - z / 34);
+        var fade = Math.max(0, 1 - z / 34) * Math.min(1, z / 2.5);
         ctx.strokeStyle = 'rgba(204,179,113,' + (fade * .22).toFixed(3) + ')';
         ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
       }
-      for (var x = -30; x <= 30; x += 2) {
-        var a2 = proj(x, -sol, 1.2, cx, cyS, f * .32), b2 = proj(x, -sol, 34, cx, cyS, f * .32);
-        var lg = ctx.createLinearGradient(a2[0], a2[1], b2[0], b2[1]);
-        lg.addColorStop(0, 'rgba(204,179,113,.20)'); lg.addColorStop(1, 'rgba(204,179,113,0)');
-        ctx.strokeStyle = lg; ctx.beginPath(); ctx.moveTo(a2[0], a2[1]); ctx.lineTo(b2[0], b2[1]); ctx.stroke();
-      }
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(grilleFixe(f, cx, cyS, sol), 0, 0);
+      ctx.restore();
 
-      // 3. La poussiere d'or, qui monte et vient vers nous
+      // 3. La poussiere d'or : elle monte en ondulant, et s'eteint en douceur
       for (var i = 0; i < poussiere.length; i++) {
         var q = poussiere[i];
-        if (!LENT) { q.y += q.v * .012; q.z -= q.v * .03; }
+        q.y += q.v * .7 * dt * vit; q.z -= q.v * 1.8 * dt * vit;
         if (q.y > 7 || q.z < 1.5) { q.y = -4 - Math.random() * 3; q.z = 20 + Math.random() * 12; q.x = (Math.random() - .5) * 26; }
-        var pp = proj(q.x, q.y, q.z, L * .5, H * .45, f * .5);
-        var al2 = Math.max(0, Math.min(1, 1.2 - q.z / 30)) * .8;
-        ctx.fillStyle = 'rgba(' + OR.join(',') + ',' + al2.toFixed(3) + ')';
+        var qx = q.x + Math.sin(t * .6 + q.ph) * .35;
+        var pp = proj(qx, q.y, q.z, L * .5, H * .45, f * .5);
+        var al2 = Math.max(0, Math.min(1, 1.2 - q.z / 30)) * Math.min(1, (7 - q.y) / 2) * .8;
+        ctx.fillStyle = 'rgba(' + OR.join(',') + ',' + Math.max(0, al2).toFixed(3) + ')';
         ctx.beginPath(); ctx.arc(pp[0], pp[1], q.r * pp[2] * .06 + .4, 0, 6.283); ctx.fill();
       }
 
-      // 4. L'anneau de bougies qui tourne
-      if (!LENT) rot += .0042;
-      inclX += (cibleX - inclX) * .05; inclY += (cibleY - inclY) * .05;
-      // Le marche vit : toutes les 380 ms une bougie est remplacee.
-      if (now - dernierTick > 380 && !LENT) {
-        dernierTick = now; bougies.shift(); var nb = nouvelle(); nb.nait = now; bougies.push(nb);
-      }
-      var acx = L * (o.anneauX || .5), acy = H * (o.anneauY || .5);
+      // 4. L'anneau de bougies : une rotation continue, calee sur le temps
+      rot += dt * .11 * vit;
+      var lisse = 1 - Math.exp(-dt * 2.2);
+      inclX += (cibleX - inclX) * lisse; inclY += (cibleY - inclY) * lisse;
+      var acx = L * (o.anneauX || .5), acy = H * (o.anneauY || .5) + Math.sin(t * .45) * H * .008;
       var R = o.rayon || (o.compact ? 5.4 : 7.6), zc = o.compact ? 12 : 13, fA = f * (o.compact ? .62 : .58);
-      var pts = [];
-      for (var k = 0; k < bougies.length; k++) {
-        var an = (k / bougies.length) * Math.PI * 2 + rot + inclY;
+      var cs = Math.cos(inclX), sn = Math.sin(inclX);
+      var pts = [], demi = Math.PI / NB * .82;
+      for (var k = 0; k < NB; k++) {
+        var base = (k / NB) * Math.PI * 2;
+        var an = base + rot + inclY;
         var bx = Math.cos(an) * R, bz = Math.sin(an) * R;
-        // inclinaison de l'anneau (vers nous)
-        var cs = Math.cos(inclX), sn = Math.sin(inclX);
-        pts.push({ k: k, x: bx, z: bz * cs + zc, yInc: bz * sn, b: bougies[k] });
+        var po0 = prix(base - demi, t), pc0 = prix(base + demi, t);
+        var meche = .16 + .12 * (1 + Math.sin(7 * base + 1.1 * t)) / 2;
+        pts.push({ x: bx, z: bz * cs + zc, yInc: bz * sn, o: po0, c: pc0,
+                   h: Math.max(po0, pc0) + meche, l: Math.min(po0, pc0) - meche * .9 });
       }
       pts.sort(function (u, v) { return v.z - u.z; });
-      // l'orbite
-      ctx.strokeStyle = 'rgba(204,179,113,.18)'; ctx.lineWidth = 1; ctx.beginPath();
-      for (var s = 0; s <= 64; s++) {
-        var aa = s / 64 * Math.PI * 2, ox = Math.cos(aa) * R, oz = Math.sin(aa) * R;
-        var po = proj(ox, -1.4 - oz * Math.sin(inclX), oz * Math.cos(inclX) + zc, acx, acy, fA);
+      // l'orbite, et une lueur qui la parcourt
+      ctx.lineWidth = 1; ctx.beginPath();
+      for (var s = 0; s <= 72; s++) {
+        var aa = s / 72 * Math.PI * 2, ox = Math.cos(aa) * R, oz = Math.sin(aa) * R;
+        var po = proj(ox, -1.4 - oz * sn, oz * cs + zc, acx, acy, fA);
         if (s === 0) ctx.moveTo(po[0], po[1]); else ctx.lineTo(po[0], po[1]);
       }
-      ctx.stroke();
+      ctx.strokeStyle = 'rgba(204,179,113,.16)'; ctx.stroke();
       var ech = o.compact ? .5 : .62;
+      ctx.globalCompositeOperation = 'source-over';
       for (var m = 0; m < pts.length; m++) {
-        var P = pts[m], bo = P.b;
-        var age = bo.nait ? Math.min(1, (now - bo.nait) / 500) : 1;
-        var prof = Math.max(.18, Math.min(1, 1.25 - (P.z - (zc - R)) / (2 * R)));
-        var yH = proj(P.x, bo.h * ech - P.yInc, P.z, acx, acy, fA), yL = proj(P.x, bo.l * ech - P.yInc, P.z, acx, acy, fA);
-        var yO = proj(P.x, bo.o * ech - P.yInc, P.z, acx, acy, fA), yC = proj(P.x, bo.c * ech - P.yInc, P.z, acx, acy, fA);
-        var haut = bo.c >= bo.o, coul = haut ? VERT : ROUGE;
+        var P = pts[m];
+        var prof = Math.max(.16, Math.min(1, 1.25 - (P.z - (zc - R)) / (2 * R)));
+        var yH = proj(P.x, P.h * ech - P.yInc, P.z, acx, acy, fA), yL = proj(P.x, P.l * ech - P.yInc, P.z, acx, acy, fA);
+        var yO = proj(P.x, P.o * ech - P.yInc, P.z, acx, acy, fA), yC = proj(P.x, P.c * ech - P.yInc, P.z, acx, acy, fA);
+        var coul = teinte(P.c - P.o);
         var w = Math.max(2.5, .3 * yO[2]);
-        ctx.globalAlpha = prof * age;
-        ctx.strokeStyle = coul; ctx.lineWidth = Math.max(1, w * .16);
+        var top = Math.min(yO[1], yC[1]), hh = Math.max(2, Math.abs(yO[1] - yC[1]));
+        // la meche
+        ctx.strokeStyle = rgba(coul, prof); ctx.lineWidth = Math.max(1, w * .16);
         ctx.beginPath(); ctx.moveTo(yH[0], yH[1]); ctx.lineTo(yL[0], yL[1]); ctx.stroke();
-        var top = Math.min(yO[1], yC[1]), hh = Math.max(2, Math.abs(yO[1] - yC[1])) * age;
-        ctx.fillStyle = coul;
-        ctx.shadowColor = coul; ctx.shadowBlur = prof > .7 ? 14 : 0;
+        // PAS DE HALO. Isaac, 03/10/2026 : « cette lueur en carre autour des
+        // bougies, je n'aime pas — juste la bougie toute seule, qui bouge en
+        // douceur ». Le corps et la meche, rien d'autre.
+        // le corps
+        ctx.fillStyle = rgba(coul, prof);
         ctx.fillRect(yO[0] - w / 2, top, w, hh);
-        ctx.shadowBlur = 0;
-        // un liseré d'or sur les bougies de devant
-        if (prof > .75) { ctx.strokeStyle = 'rgba(246,227,168,.55)'; ctx.lineWidth = 1; ctx.strokeRect(yO[0] - w / 2, top, w, hh); }
+        // un lisere d'or sur les bougies de devant, qui s'allume en douceur
+        if (prof > .7) {
+          ctx.strokeStyle = 'rgba(246,227,168,' + ((prof - .7) / .3 * .55).toFixed(3) + ')'; ctx.lineWidth = 1;
+          ctx.strokeRect(yO[0] - w / 2, top, w, hh);
+        }
       }
-      ctx.globalAlpha = 1;
     }
 
     var vivant = true, enVue = true, id = 0;
-    function boucle(now) { if (!vivant) return; if (enVue && !document.hidden) dessiner(now); id = requestAnimationFrame(boucle); }
+    function boucle(now) { if (!vivant) return; if (enVue && !document.hidden) dessiner(now); else avant = now; id = requestAnimationFrame(boucle); }
     taille(); window.addEventListener('resize', taille);
     try { new IntersectionObserver(function (e) { enVue = e[0].isIntersecting; }).observe(cv); } catch (e) {}
     id = requestAnimationFrame(boucle);
     return {
       incliner: function (nx, ny) { cibleY = nx * .5; cibleX = BASE + ny * .16; },
-      arreter: function () { vivant = false; cancelAnimationFrame(id); },
+      arreter: function () { vivant = false; cancelAnimationFrame(id); window.removeEventListener('resize', taille); },
     };
   }
 
@@ -393,8 +434,9 @@
     // Le coach, en bas a droite, qui ecrit
     var co = carte('ts-co', POS.co, 110, 8);
     co.innerHTML = '<div class="ts-av"></div><div style="min-width:0"><div class="ts-et" style="color:#ccb371">Coach IA</div><p></p></div>';
-    var para = co.querySelector('p'), iC = 0, tC = null;
+    var para = co.querySelector('p'), iC = 0, tC = null, fini = false;
     function ecrire() {
+      if (fini) return;
       var txt = COACH[iC++ % COACH.length], n = 0;
       clearInterval(tC);
       tC = setInterval(function () {
@@ -411,7 +453,7 @@
       incliner: function (nx, ny) {
         rig.style.transform = 'rotateY(' + (nx * 12 - 9) + 'deg) rotateX(' + (6 - ny * 8) + 'deg)';
       },
-      arreter: function () { clearInterval(tG); clearInterval(tK); clearInterval(tX); clearInterval(tC); },
+      arreter: function () { fini = true; clearInterval(tG); clearInterval(tK); clearInterval(tX); clearInterval(tC); },
     };
   }
 
@@ -432,22 +474,35 @@
         cartes = Cartes(sc, o);
       }
       // La souris oriente la scene ; sans souris, elle respire toute seule.
-      var nx = .5, ny = .5, cx = .5, cy = .5, souris = false;
+      var nx = .5, ny = .5, cx = .5, cy = .5, souris = false, actif = true;
       var cible = o.ecoute || window;
-      cible.addEventListener('mousemove', function (e) {
+      function bouge(e) {
         souris = true;
         var r = el.getBoundingClientRect();
         nx = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
         ny = Math.max(0, Math.min(1, (e.clientY - r.top) / Math.max(1, r.height)));
-      });
+      }
+      cible.addEventListener('mousemove', bouge);
+      // Lissage cale sur le TEMPS (et non sur les images) : le meme glissement
+      // sur une machine rapide ou lente.
+      var avant = performance.now();
       (function suivre(now) {
+        if (!actif) return;
+        var dt = Math.min(.05, Math.max(0, (now - avant) / 1000)); avant = now;
         if (!souris && !LENT) { nx = .5 + Math.sin(now / 3200) * .25; ny = .5 + Math.cos(now / 4100) * .2; }
-        cx += (nx - cx) * .06; cy += (ny - cy) * .06;
+        var k = 1 - Math.exp(-dt * 3.2);
+        cx += (nx - cx) * k; cy += (ny - cy) * k;
         fond.incliner(cx - .5, cy - .5);
         if (cartes) cartes.incliner(cx, cy);
         requestAnimationFrame(suivre);
       })(performance.now());
-      return { arreter: function () { fond.arreter(); if (cartes) cartes.arreter(); } };
+      // Demonter : tout s'arrete et la scene disparait (la page la remonte
+      // quand on passe d'un ecran large a un ecran etroit, ou l'inverse).
+      return { arreter: function () {
+        actif = false; fond.arreter(); if (cartes) cartes.arreter();
+        cible.removeEventListener('mousemove', bouge);
+        if (racine.parentNode) racine.parentNode.removeChild(racine);
+      } };
     },
   };
 })();

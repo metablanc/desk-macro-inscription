@@ -7,15 +7,26 @@
   'use strict';
 
   // 1. La scene 3D du haut de page. Sur un ecran etroit, les cartes passent
-  //    SOUS le texte au lieu de le recouvrir.
-  var sc = document.getElementById('scene');
-  if (sc && window.TrackScene) {
-    var etroit = window.innerWidth < 960, telephone = window.innerWidth < 560;
-    TrackScene.monter(sc, etroit
-      ? { compact: true, etroit: telephone, anneauX: .5, anneauY: .82, rayon: telephone ? 4.2 : 5.4,
-          zoneCartes: 'left:4%;right:4%;bottom:3%;height:' + (telephone ? 470 : 400) + 'px' }
-      : { anneauX: .73, anneauY: .52, zoneCartes: 'right:3%;top:14%;width:48%;height:72%' });
+  //    SOUS le texte au lieu de le recouvrir ; sur un telephone, elles
+  //    s'empilent. Quand on change de format (fenetre agrandie, tablette
+  //    tournee), la scene se REMONTE dans la bonne disposition — sinon elle
+  //    garde celle du chargement, etiree ou ecrasee.
+  var sc = document.getElementById('scene'), scene = null, format = '';
+  function formatActuel() { return window.innerWidth < 560 ? 'tel' : window.innerWidth < 960 ? 'etroit' : 'large'; }
+  function monter() {
+    if (!sc || !window.TrackScene) return;
+    var f = formatActuel();
+    if (f === format) return;
+    if (scene) { try { scene.arreter(); } catch (e) {} }
+    format = f;
+    scene = TrackScene.monter(sc, f === 'large'
+      ? { anneauX: .73, anneauY: .52, zoneCartes: 'right:3%;top:14%;width:48%;height:72%' }
+      : { compact: true, etroit: f === 'tel', anneauX: .5, anneauY: .82, rayon: f === 'tel' ? 4.2 : 5.4,
+          zoneCartes: 'left:4%;right:4%;bottom:3%;height:' + (f === 'tel' ? 470 : 400) + 'px' });
   }
+  monter();
+  var minuteur = null;
+  window.addEventListener('resize', function () { clearTimeout(minuteur); minuteur = setTimeout(monter, 250); });
 
   // 2. L'en-tete prend un fond des qu'on descend.
   var entete = document.getElementById('entete');
